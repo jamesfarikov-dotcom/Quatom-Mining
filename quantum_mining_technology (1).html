@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quantum Mining Technology</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- TON Connect UI SDK -->
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        appBg: '#091026',
+                        cardBg: '#0d1633',
+                        btcYellow: '#F7931A',
+                        neonGreen: '#22c55e',
+                        neonBlue: '#3b82f6',
+                        neonPurple: '#a855f7',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #060919;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom Cards matching the screenshot */
+        .card-yellow {
+            background-color: #0b132b;
+            border: 1.5px solid #d97706;
+            box-shadow: 0 0 12px rgba(217, 119, 6, 0.15);
+        }
+
+        .card-green {
+            background-color: #0b132b;
+            border: 1.5px solid #16a34a;
+            box-shadow: 0 0 12px rgba(22, 163, 74, 0.15);
+        }
+
+        .card-blue {
+            background-color: #0b132b;
+            border: 1.5px solid #2563eb;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Neon Buttons styling matching original mockup */
+        .btn-green {
+            background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+            transition: all 0.2s ease;
+        }
+        .btn-green:active {
+            transform: scale(0.98);
+            filter: brightness(0.9);
+        }
+
+        .btn-red {
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-purple {
+            background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+        }
+
+        .btn-orange {
+            background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .btn-slate {
+            background: linear-gradient(180deg, #475569 0%, #334155 100%);
+        }
+
+        /* Pulsing indicator */
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.95); }
+        }
+        .animate-mining {
+            animation: pulse-fast 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #091026;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen p-0 sm:p-4">
+
+    <!-- AUTHENTICATION CONTAINER (LOGIN / REGISTRATION) -->
+    <div id="auth-container" class="w-full max-w-md bg-[#091026] min-h-screen sm:min-h-[840px] sm:h-[850px] sm:rounded-[36px] border-0 sm:border-[8px] border-[#1e293b] flex flex-col justify-between overflow-hidden shadow-2xl relative p-6">
+        
+        <!-- Top Branding -->
+        <div class="text-center pt-8">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20 mb-3 border border-amber-400/30">
+                <i class="fa-solid fa-atom text-white text-3xl animate-spin" style="animation-duration: 10s;"></i>
+            </div>
+            <h1 class="text-2xl font-extrabold text-white tracking-wide">QUANTUM MINING</h1>
+            <p class="text-xs text-amber-400 font-semibold tracking-widest uppercase mt-1">Technology Platform</p>
+        </div>
+
+        <!-- Auth Forms Wrapper -->
+        <div class="my-auto space-y-6">
+            
+            <!-- REGISTRATION FORM -->
+            <div id="register-form-box" class="space-y-4">
+                <div class="border-b border-gray-800 pb-2">
+                    <h2 class="text-lg font-bold text-white">Создать аккаунт</h2>
+                    <p class="text-xs text-gray-400">Зарегистрируйтесь для старта квантового майнинга</p>
+                </div>
+
+                <form onsubmit="handleRegistration(event)" class="space-y-3.5">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Электронная почта (Email)</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                            <input type="email" id="reg-email" placeholder="example@domain.com" class="w-full bg-[#070c1e] border border-gray-700 rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Пароль</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                            <input type="password" id="reg-password" minlength="6" placeholder="Минимум 6 символов..." class="w-full bg-[#070c1e] border border-gray-700 rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Подтвердите пароль</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-shield-halved absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                            <input type="password" id="reg-confirm-password" minlength="6" placeholder="Повторите пароль..." class="w-full bg-[#070c1e] border border-gray-700 rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500" required>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 pt-1">
+                        <input type="checkbox" id="terms-check" class="rounded bg-gray-900 border-gray-700 text-amber-500 focus:ring-0" required>
+                        <label for="terms-check" class="text-[11px] text-gray-400">Я согласен с правилами сервиса Quantum Tech</label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl font-bold text-xs text-white btn-orange shadow-lg shadow-orange-500/20 active:scale-95 transition">
+                        Зарегистрироваться
+                    </button>
+                </form>
+
+                <div class="text-center text-xs text-gray-400 pt-2">
+                    Уже есть аккаунт? 
+                    <button onclick="toggleAuthMode('login')" class="text-amber-400 font-bold hover:underline">Войти</button>
+                </div>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="login-form-box" class="space-y-4 hidden">
+                <div class="border-b border-gray-800 pb-2">
+                    <h2 class="text-lg font-bold text-white">Вход в систему</h2>
+                    <p class="text-xs text-gray-400">Введите ваш зарегистрированный Email и пароль</p>
+                </div>
+
+                <form onsubmit="handleLogin(event)" class="space-y-3.5">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Электронная почта (Email)</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                            <input type="email" id="login-email" placeholder="example@domain.com" class="w-full bg-[#070c1e] border border-gray-700 rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Пароль</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-gray-500 text-xs"></i>
+                            <input type="password" id="login-password" placeholder="Ваш пароль..." class="w-full bg-[#070c1e] border border-gray-700 rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-amber-500" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl font-bold text-xs text-white btn-green shadow-lg shadow-emerald-500/20 active:scale-95 transition">
+                        Войти в аккаунт
+                    </button>
+                </form>
+
+                <div class="text-center text-xs text-gray-400 pt-2">
+                    Ещё нет аккаунта? 
+                    <button onclick="toggleAuthMode('register')" class="text-amber-400 font-bold hover:underline">Зарегистрироваться</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Auth Footer -->
+        <div class="text-center text-[10px] text-gray-600 border-t border-gray-800/60 pt-3">
+            Encrypted with 256-Bit SSL • Quantum Security Node
+        </div>
+    </div>
+
+    <!-- Mobile Screen Frame Container (MAIN APP VIEW - HIDDEN UNTIL LOGGED IN) -->
+    <div id="main-app-container" class="w-full max-w-md bg-[#091026] min-h-screen sm:min-h-[840px] sm:h-[850px] sm:rounded-[36px] border-0 sm:border-[8px] border-[#1e293b] flex-col justify-between overflow-hidden shadow-2xl relative hidden">
+        
+        <!-- Header Bar -->
+        <div class="px-5 pt-4 pb-2 flex justify-between items-center text-xs text-gray-400 font-medium z-10 border-b border-gray-800/40">
+            <div class="flex items-center space-x-2">
+                <span class="text-xs text-amber-500 font-bold tracking-widest uppercase">Quantum</span>
+                <span class="bg-amber-500/10 text-amber-400 text-[10px] px-1.5 py-0.5 rounded border border-amber-500/20">v2.4 PRO</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <!-- User Profile badge -->
+                <div class="flex items-center space-x-1.5 bg-blue-950/60 border border-blue-500/30 px-2 py-1 rounded-lg">
+                    <i class="fa-solid fa-circle-user text-blue-400 text-xs"></i>
+                    <span id="user-display-email" class="text-[10px] text-gray-300 font-mono max-w-[90px] truncate">user@quantum.io</span>
+                </div>
+                <!-- Admin trigger icon -->
+                <button onclick="openAdminModal()" class="text-gray-400 hover:text-amber-400 transition" title="Панель администратора">
+                    <i class="fa-solid fa-user-shield text-sm"></i>
+                </button>
+                <!-- Wallet Connection Button -->
+                <div id="ton-connect-button"></div>
+            </div>
+        </div>
+
+        <!-- Main Scrollable App Content -->
+        <div class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+            
+            <!-- 1. BITCOIN PRICE CARD (Yellow Frame) -->
+            <div class="card-yellow rounded-2xl p-4 relative">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <!-- Custom SVG Bitcoin Icon -->
+                        <div class="w-10 h-10 rounded-full bg-[#F7931A] flex items-center justify-center shadow-lg shadow-orange-500/20">
+                            <i class="fa-bold fa-bitcoin text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-400 font-medium block">Bitcoin Price</span>
+                            <div class="flex items-baseline space-x-1">
+                                <span class="text-2xl font-bold text-white tracking-tight" id="btc-price-display">$110,866.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Refresh Price Button -->
+                    <button onclick="fetchBtcPrice(true)" id="refresh-btn" class="w-9 h-9 rounded-xl bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-blue-400 hover:bg-blue-600/50 active:scale-95 transition">
+                        <i class="fa-solid fa-arrows-rotate text-sm" id="refresh-icon"></i>
+                    </button>
+                </div>
+                <div class="mt-2 pt-2 border-t border-amber-500/10 flex justify-between items-center text-[11px] text-gray-400">
+                    <span class="flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Live CoinGecko Stream
+                    </span>
+                    <span id="price-change-24h" class="text-emerald-400 font-semibold">+2.45%</span>
+                </div>
+            </div>
+
+            <!-- 2. MINING BALANCE CARD (Green Frame) -->
+            <div class="card-green rounded-2xl p-4 relative">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-emerald-400 font-semibold text-sm tracking-wide">Mining Balance</h3>
+                        <div class="mt-2">
+                            <div class="text-2xl font-extrabold text-white tracking-tight font-mono" id="btc-balance-display">
+                                2.11317771
+                            </div>
+                            <div class="text-xs text-emerald-400/90 font-medium mt-0.5">
+                                BTC
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1 font-medium" id="usd-balance-display">
+                                ≈ $234,279.56 USD
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mining Status Text (Exact wording as screenshot) -->
+                    <div class="text-right">
+                        <span id="mining-status-badge" class="text-xs text-amber-400 font-medium animate-mining block">
+                            Mining in progress...
+                        </span>
+                        <div class="mt-4 inline-flex items-center px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400">
+                            <i class="fa-solid fa-microchip mr-1.5"></i> Q-Hash v4
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. MINING CONTROL CARD (Blue Frame) -->
+            <div class="card-blue rounded-2xl p-5 text-center relative">
+                <h3 class="text-blue-400 font-semibold text-base mb-1">Mining Control</h3>
+                <p class="text-xs text-gray-300 font-medium mb-4">
+                    Mining Rate: <span class="text-white font-bold">1 BTC = 48 hours</span>
+                </p>
+
+                <!-- Action Button (Stop / Start Mining) -->
+                <button id="toggle-mining-btn" onclick="toggleMining()" class="w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm btn-green shadow-lg transition duration-200">
+                    Stop Mining
+                </button>
+
+                <!-- Mining progress label (Exact screenshot style) -->
+                <div class="mt-3 text-xs text-amber-400 font-medium" id="mining-subtext">
+                    Mining in Progress...
+                </div>
+
+                <!-- Live Mining Stats -->
+                <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-blue-500/20 text-left">
+                    <div class="bg-blue-950/40 p-2 rounded-lg border border-blue-500/10">
+                        <span class="text-[10px] text-gray-400 block">Hashrate Rate</span>
+                        <span class="text-xs font-bold text-blue-300" id="hashrate-display">48.65 TH/s</span>
+                    </div>
+                    <div class="bg-blue-950/40 p-2 rounded-lg border border-blue-500/10">
+                        <span class="text-[10px] text-gray-400 block">Session Profit</span>
+                        <span class="text-xs font-bold text-emerald-400" id="session-profit">+0.00042 BTC</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ACTION BUTTONS SECTION (Matching layout & colors) -->
+            <div class="space-y-2.5 pt-1">
+                <!-- Withdraw Button (Purple) -->
+                <button onclick="openWithdrawModal()" class="w-full py-3.5 rounded-xl text-white font-bold text-sm btn-purple shadow-lg shadow-purple-600/20 active:scale-95 transition">
+                    <i class="fa-solid fa-wallet mr-2"></i> Withdraw
+                </button>
+
+                <!-- Bottom 3 Grid Buttons -->
+                <div class="grid grid-cols-3 gap-2.5">
+                    <!-- Logout -->
+                    <button onclick="handleLogout()" class="py-3 rounded-xl text-white font-bold text-xs btn-red shadow-md active:scale-95 transition flex items-center justify-center">
+                        Logout
+                    </button>
+                    <!-- Instruction -->
+                    <button onclick="openModal('instruction-modal')" class="py-3 rounded-xl text-white font-bold text-xs btn-orange shadow-md active:scale-95 transition flex items-center justify-center">
+                        Instruction
+                    </button>
+                    <!-- About -->
+                    <button onclick="openModal('about-modal')" class="py-3 rounded-xl text-white font-bold text-xs btn-slate border border-gray-600/50 shadow-md active:scale-95 transition flex items-center justify-center">
+                        About
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Bar -->
+        <div class="px-5 py-3 text-center border-t border-gray-800/60 bg-[#070c1e] text-[10px] text-gray-500 flex justify-between items-center">
+            <span>© 2026 Quantum Mining Tech</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Node #772 Online</span>
+        </div>
+    </div>
+
+    <!-- MODAL 1: WITHDRAWAL MODAL -->
+    <div id="withdraw-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#0d1633] border border-purple-500/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative">
+            <button onclick="closeModal('withdraw-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-2 text-purple-400 mb-3">
+                <i class="fa-solid fa-arrow-up-from-bracket text-xl"></i>
+                <h3 class="text-lg font-bold text-white">Вывод средств (1 BTC)</h3>
+            </div>
+            <p class="text-xs text-gray-300 mb-4">Минимальная сумма вывода составляет **1.00000000 BTC**. Перевод выполняется через выбранную блокчейн сеть.</p>
+
+            <form onsubmit="handleWithdrawSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Доступный баланс</label>
+                    <div class="w-full bg-[#070c1e] border border-gray-700 rounded-lg p-2.5 text-xs text-emerald-400 font-mono font-bold" id="withdraw-available-balance">
+                        2.11317771 BTC
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Сумма вывода (BTC)</label>
+                    <input type="number" step="0.00000001" min="1" id="withdraw-amount" value="1.00000000" class="w-full bg-[#070c1e] border border-purple-500/50 rounded-lg p-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-400" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Адрес получателя (BTC / TON Wallet)</label>
+                    <input type="text" id="withdraw-address" placeholder="Вставьте ваш BTC или TON адрес..." class="w-full bg-[#070c1e] border border-gray-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-purple-400" required>
+                </div>
+
+                <div class="p-2.5 bg-purple-950/30 border border-purple-500/20 rounded-lg text-[11px] text-purple-200">
+                    <i class="fa-solid fa-shield-halved text-purple-400 mr-1"></i> 
+                    Подключенный кошелек Tonkeeper будет использован для подписи смарт-контракта.
+                </div>
+
+                <button type="submit" class="w-full py-3 rounded-xl btn-purple text-white font-bold text-xs shadow-lg mt-2">
+                    Подтвердить вывод 1 BTC
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: INSTRUCTION MODAL -->
+    <div id="instruction-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#0d1633] border border-orange-500/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button onclick="closeModal('instruction-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-2 text-orange-400 mb-3">
+                <i class="fa-solid fa-book-open text-xl"></i>
+                <h3 class="text-lg font-bold text-white">Инструкция по майнингу</h3>
+            </div>
+            <div class="overflow-y-auto space-y-3 text-xs text-gray-300 pr-1">
+                <div class="bg-[#070c1e] p-3 rounded-xl border border-gray-800">
+                    <h4 class="font-bold text-orange-400 mb-1">1. Как работает Quantum Mining?</h4>
+                    <p class="text-gray-400 leading-relaxed">Наш облачный квантовый алгоритм производит вычисления в фоновом режиме. Скорость добычи зафиксирована на уровне **1 BTC за 48 часов** (0.0208333 BTC в час).</p>
+                </div>
+                <div class="bg-[#070c1e] p-3 rounded-xl border border-gray-800">
+                    <h4 class="font-bold text-orange-400 mb-1">2. Управление майнингом</h4>
+                    <p class="text-gray-400 leading-relaxed">Вы можете в любой момент поставить майнинг на паузу кнопкой **Stop Mining** и возобновить его кнопкой **Start Mining**. Накопленный баланс сохраняется.</p>
+                </div>
+                <div class="bg-[#070c1e] p-3 rounded-xl border border-gray-800">
+                    <h4 class="font-bold text-orange-400 mb-1">3. Интеграция с Tonkeeper</h4>
+                    <p class="text-gray-400 leading-relaxed">Для вывода накопленных средств подключите ваш кошелек **Tonkeeper** через верхнюю панель управления. Транзакции проходят с минимальной комиссией сети TON.</p>
+                </div>
+                <div class="bg-[#070c1e] p-3 rounded-xl border border-gray-800">
+                    <h4 class="font-bold text-orange-400 mb-1">4. Регламент вывода 1 BTC</h4>
+                    <p class="text-gray-400 leading-relaxed">Вывод доступен при достижении баланса от 1 BTC. Обработка заявки занимает от 5 до 15 минут.</p>
+                </div>
+            </div>
+            <button onclick="closeModal('instruction-modal')" class="w-full py-2.5 rounded-xl btn-orange text-white font-bold text-xs mt-4">
+                Понятно
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 3: ABOUT MODAL -->
+    <div id="about-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#0d1633] border border-slate-500/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative">
+            <button onclick="closeModal('about-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="text-center">
+                <div class="w-14 h-14 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center mx-auto mb-3">
+                    <i class="fa-solid fa-atom text-2xl text-amber-400"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">Quantum Mining Tech</h3>
+                <span class="text-[11px] text-amber-400 font-semibold uppercase tracking-widest">Next-Gen Quantum Network</span>
+                
+                <p class="text-xs text-gray-300 mt-3 leading-relaxed text-left">
+                    Quantum Mining Technology — передовая система распределенных вычислений на базе квантовых узлов. Приложение интегрирует живые котировки рынка с возможностью прямого вывода через экосистему TON и Tonkeeper.
+                </p>
+
+                <div class="mt-4 pt-3 border-t border-gray-800 grid grid-cols-2 gap-2 text-left text-[11px]">
+                    <div>
+                        <span class="text-gray-500 block">Версия:</span>
+                        <span class="text-gray-200 font-mono">v2.4.0 PRO</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block">Безопасность:</span>
+                        <span class="text-emerald-400 font-mono">256-bit SSL</span>
+                    </div>
+                </div>
+
+                <button onclick="closeModal('about-modal')" class="w-full py-2.5 rounded-xl btn-slate text-white font-bold text-xs mt-4">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: ADMIN PANEL MODAL -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#0b132b] border-2 border-amber-500 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative">
+            <button onclick="closeModal('admin-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="flex items-center space-x-2 text-amber-400 mb-4">
+                <i class="fa-solid fa-user-gear text-xl"></i>
+                <h3 class="text-lg font-bold text-white">Панель Администратора</h3>
+            </div>
+
+            <!-- Pin Authentication View -->
+            <div id="admin-login-view" class="space-y-3">
+                <p class="text-xs text-gray-300">Введите PIN-код для доступа к управлению балансом (По умолчанию: <strong class="text-amber-400">7777</strong>):</p>
+                <input type="password" id="admin-pin-input" maxlength="6" placeholder="Введите PIN" class="w-full bg-[#070c1e] border border-amber-500/40 rounded-lg p-2.5 text-center text-lg text-white font-mono tracking-widest focus:outline-none">
+                <button onclick="verifyAdminPin()" class="w-full py-2.5 rounded-xl btn-orange text-white font-bold text-xs">
+                    Войти в систему
+                </button>
+            </div>
+
+            <!-- Admin Controls View (Hidden initially) -->
+            <div id="admin-control-view" class="space-y-4 hidden">
+                <div class="bg-amber-500/10 border border-amber-500/30 p-2 rounded-lg text-[11px] text-amber-300">
+                    <i class="fa-solid fa-check-circle mr-1"></i> Режим Администратора активен
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Изменить баланс BTC:</label>
+                    <div class="flex space-x-2">
+                        <input type="number" step="0.00000001" id="admin-btc-input" class="w-full bg-[#070c1e] border border-gray-700 rounded-lg p-2 text-xs text-white font-mono">
+                        <button onclick="updateBalanceFromAdmin()" class="px-3 py-2 bg-emerald-600 rounded-lg text-xs font-bold text-white">
+                            Сохранить
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="quickSetBalance(1.0)" class="py-2 bg-gray-800 hover:bg-gray-700 text-xs text-amber-400 rounded-lg font-mono">
+                        Установить 1.0 BTC
+                    </button>
+                    <button onclick="quickSetBalance(5.0)" class="py-2 bg-gray-800 hover:bg-gray-700 text-xs text-amber-400 rounded-lg font-mono">
+                        Установить 5.0 BTC
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Ручная цена BTC ($):</label>
+                    <div class="flex space-x-2">
+                        <input type="number" id="admin-price-input" class="w-full bg-[#070c1e] border border-gray-700 rounded-lg p-2 text-xs text-white font-mono">
+                        <button onclick="updatePriceFromAdmin()" class="px-3 py-2 bg-blue-600 rounded-lg text-xs font-bold text-white">
+                            Изменить
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="closeModal('admin-modal')" class="w-full py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-bold text-xs">
+                    Закрыть Панель
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST TO REPLACE ALERT() -->
+    <div id="toast-notification" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-900 border border-amber-500/60 text-white px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center space-x-3 transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4 max-w-xs w-full">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-amber-400 text-lg"></i>
+        <div class="text-xs font-medium" id="toast-message">Уведомление</div>
+    </div>
+
+
+    <!-- APPLICATION LOGIC SCRIPT -->
+    <script>
+        // --- APP STATE ---
+        let currentBtcPrice = 110866.00;
+        let btcBalance = 2.11317771;
+        let isMining = true;
+        let miningInterval = null;
+        let sessionEarned = 0.00042100;
+        let currentUser = null;
+        
+        // Mining Math: 1 BTC per 48 hours = 1 / (48 * 3600) BTC per second
+        // Ticking every 100ms (0.1s)
+        const btcPerSecond = 1 / (48 * 3600);
+        const btcPerTick = btcPerSecond / 10; 
+
+        let tonConnectUI = null;
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            // Check active session
+            const activeSession = localStorage.getItem('qm_active_user');
+            if (activeSession) {
+                currentUser = JSON.parse(activeSession);
+                showAppScreen();
+            } else {
+                showAuthScreen();
+            }
+
+            // Init TonConnect UI
+            try {
+                tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                    manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json',
+                    buttonRootId: 'ton-connect-button'
+                });
+
+                tonConnectUI.onStatusChange(wallet => {
+                    if (wallet) {
+                        showToast(`Tonkeeper подключен: ${wallet.account.address.substring(0,6)}...`, 'success');
+                    }
+                });
+            } catch (e) {
+                console.log('TonConnect init fallback');
+            }
+
+            // Fetch Live Price
+            fetchBtcPrice();
+
+            // Auto-refresh BTC price every 30 seconds
+            setInterval(() => fetchBtcPrice(false), 30000);
+        };
+
+        // --- AUTHENTICATION FLOW ---
+        function toggleAuthMode(mode) {
+            if (mode === 'login') {
+                document.getElementById('register-form-box').classList.add('hidden');
+                document.getElementById('login-form-box').classList.remove('hidden');
+            } else {
+                document.getElementById('login-form-box').classList.add('hidden');
+                document.getElementById('register-form-box').classList.remove('hidden');
+            }
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirmPass = document.getElementById('reg-confirm-password').value;
+
+            if (password !== confirmPass) {
+                showToast('Пароли не совпадают!', 'error');
+                return;
+            }
+
+            // Save user to localStorage database
+            const users = JSON.parse(localStorage.getItem('qm_users_db') || '{}');
+            if (users[email]) {
+                showToast('Пользователь с таким Email уже существует!', 'error');
+                return;
+            }
+
+            users[email] = {
+                email: email,
+                password: password,
+                balance: 2.11317771,
+                registeredAt: new Date().toISOString()
+            };
+
+            localStorage.setItem('qm_users_db', JSON.stringify(users));
+            
+            // Auto login after registration
+            currentUser = users[email];
+            localStorage.setItem('qm_active_user', JSON.stringify(currentUser));
+            
+            showToast('Регистрация прошла успешно!', 'success');
+            setTimeout(() => {
+                showAppScreen();
+            }, 600);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            const users = JSON.parse(localStorage.getItem('qm_users_db') || '{}');
+            
+            if (users[email] && users[email].password === password) {
+                currentUser = users[email];
+                localStorage.setItem('qm_active_user', JSON.stringify(currentUser));
+                showToast('Успешный вход в систему!', 'success');
+                setTimeout(() => {
+                    showAppScreen();
+                }, 600);
+            } else {
+                showToast('Неверный Email или пароль!', 'error');
+            }
+        }
+
+        function showAppScreen() {
+            document.getElementById('auth-container').classList.add('hidden');
+            const mainApp = document.getElementById('main-app-container');
+            mainApp.classList.remove('hidden');
+            mainApp.classList.add('flex');
+
+            if (currentUser) {
+                document.getElementById('user-display-email').innerText = currentUser.email;
+                
+                // Load balance specific to user
+                const savedBalance = localStorage.getItem(`qm_btc_balance_${currentUser.email}`);
+                if (savedBalance !== null) {
+                    btcBalance = parseFloat(savedBalance);
+                } else if (currentUser.balance !== undefined) {
+                    btcBalance = parseFloat(currentUser.balance);
+                }
+            }
+
+            updateDisplayValues();
+            startMiningProcess();
+        }
+
+        function showAuthScreen() {
+            stopMiningProcess();
+            document.getElementById('main-app-container').classList.add('hidden');
+            document.getElementById('main-app-container').classList.remove('flex');
+            document.getElementById('auth-container').classList.remove('hidden');
+        }
+
+        // --- LOGOUT HANDLER ---
+        function handleLogout() {
+            localStorage.removeItem('qm_active_user');
+            currentUser = null;
+            showToast('Вы вышли из аккаунта', 'info');
+            setTimeout(() => {
+                showAuthScreen();
+            }, 800);
+        }
+
+        // --- BITCOIN REAL PRICE FETCH (CoinGecko) ---
+        async function fetchBtcPrice(showNotification = false) {
+            const refreshIcon = document.getElementById('refresh-icon');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+                const data = await response.json();
+                
+                if (data && data.bitcoin) {
+                    currentBtcPrice = data.bitcoin.usd;
+                    const change24h = data.bitcoin.usd_24h_change || 0;
+                    
+                    updateDisplayValues();
+
+                    const changeEl = document.getElementById('price-change-24h');
+                    if (changeEl) {
+                        changeEl.innerText = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+                        changeEl.className = change24h >= 0 ? 'text-emerald-400 font-semibold' : 'text-red-400 font-semibold';
+                    }
+
+                    if (showNotification) showToast('Цена BTC успешно обновлена с рынка!', 'success');
+                }
+            } catch (err) {
+                console.log('Using default/cached price', err);
+                if (showNotification) showToast('Используется текущая цена BTC', 'info');
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+            }
+        }
+
+        // --- UPDATE UI VALUES ---
+        function updateDisplayValues() {
+            // Price Display
+            const priceEl = document.getElementById('btc-price-display');
+            if (priceEl) priceEl.innerText = '$' + currentBtcPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            // Balance Display
+            const balEl = document.getElementById('btc-balance-display');
+            if (balEl) balEl.innerText = btcBalance.toFixed(8);
+            
+            // USD Value calculation
+            const usdVal = btcBalance * currentBtcPrice;
+            const usdEl = document.getElementById('usd-balance-display');
+            if (usdEl) usdEl.innerText = '≈ $' + usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
+            
+            // Available for withdrawal
+            const withdrawAvail = document.getElementById('withdraw-available-balance');
+            if (withdrawAvail) withdrawAvail.innerText = btcBalance.toFixed(8) + ' BTC';
+        }
+
+        // --- MINING LOGIC ---
+        function startMiningProcess() {
+            if (miningInterval) clearInterval(miningInterval);
+            
+            isMining = true;
+            miningInterval = setInterval(() => {
+                if (isMining) {
+                    btcBalance += btcPerTick;
+                    sessionEarned += btcPerTick;
+                    
+                    // Save balance per user
+                    if (currentUser && currentUser.email) {
+                        localStorage.setItem(`qm_btc_balance_${currentUser.email}`, btcBalance);
+                    }
+                    
+                    updateDisplayValues();
+                    
+                    const sessionEl = document.getElementById('session-profit');
+                    if (sessionEl) {
+                        sessionEl.innerText = '+' + sessionEarned.toFixed(8) + ' BTC';
+                    }
+                }
+            }, 100);
+            
+            updateMiningUI(true);
+        }
+
+        function stopMiningProcess() {
+            isMining = false;
+            if (miningInterval) clearInterval(miningInterval);
+            updateMiningUI(false);
+        }
+
+        function toggleMining() {
+            if (isMining) {
+                stopMiningProcess();
+                showToast('Майнинг приостановлен', 'info');
+            } else {
+                startMiningProcess();
+                showToast('Квантовый майнинг запущен!', 'success');
+            }
+        }
+
+        function updateMiningUI(active) {
+            const btn = document.getElementById('toggle-mining-btn');
+            const statusBadge = document.getElementById('mining-status-badge');
+            const subtext = document.getElementById('mining-subtext');
+            const hashrate = document.getElementById('hashrate-display');
+
+            if (!btn) return;
+
+            if (active) {
+                btn.innerText = 'Stop Mining';
+                btn.className = 'w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm btn-green shadow-lg transition duration-200';
+                
+                if (statusBadge) {
+                    statusBadge.innerText = 'Mining in progress...';
+                    statusBadge.className = 'text-xs text-amber-400 font-medium animate-mining block';
+                }
+                
+                if (subtext) {
+                    subtext.innerText = 'Mining in Progress...';
+                    subtext.className = 'mt-3 text-xs text-amber-400 font-medium';
+                }
+                
+                if (hashrate) hashrate.innerText = (45.0 + Math.random() * 5).toFixed(2) + ' TH/s';
+            } else {
+                btn.innerText = 'Start Mining';
+                btn.className = 'w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm btn-red shadow-lg transition duration-200';
+                
+                if (statusBadge) {
+                    statusBadge.innerText = 'Mining Stopped';
+                    statusBadge.className = 'text-xs text-red-400 font-medium block';
+                }
+                
+                if (subtext) {
+                    subtext.innerText = 'Mining Paused';
+                    subtext.className = 'mt-3 text-xs text-red-400 font-medium';
+                }
+                
+                if (hashrate) hashrate.innerText = '0.00 TH/s';
+            }
+        }
+
+        // --- WITHDRAWAL HANDLER ---
+        function openWithdrawModal() {
+            openModal('withdraw-modal');
+        }
+
+        function handleWithdrawSubmit(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const address = document.getElementById('withdraw-address').value;
+
+            if (amount < 1.0) {
+                showToast('Минимальная сумма для вывода: 1 BTC', 'error');
+                return;
+            }
+
+            if (btcBalance < amount) {
+                showToast('Недостаточно средств на балансе!', 'error');
+                return;
+            }
+
+            // Deduct balance
+            btcBalance -= amount;
+            if (currentUser && currentUser.email) {
+                localStorage.setItem(`qm_btc_balance_${currentUser.email}`, btcBalance);
+            }
+            updateDisplayValues();
+            
+            closeModal('withdraw-modal');
+            showToast(`Заявка на вывод ${amount} BTC на адрес ${address.substring(0,8)}... принята в обработку TON Network!`, 'success');
+        }
+
+        // --- ADMIN PANEL LOGIC ---
+        function openAdminModal() {
+            document.getElementById('admin-login-view').classList.remove('hidden');
+            document.getElementById('admin-control-view').classList.add('hidden');
+            document.getElementById('admin-pin-input').value = '';
+            openModal('admin-modal');
+        }
+
+        function verifyAdminPin() {
+            const pin = document.getElementById('admin-pin-input').value;
+            if (pin === '7777' || pin === '1234') {
+                document.getElementById('admin-login-view').classList.add('hidden');
+                document.getElementById('admin-control-view').classList.remove('hidden');
+                document.getElementById('admin-btc-input').value = btcBalance.toFixed(8);
+                document.getElementById('admin-price-input').value = currentBtcPrice;
+                showToast('Доступ в админ-панель разрешен', 'success');
+            } else {
+                showToast('Неверный PIN-код!', 'error');
+            }
+        }
+
+        function updateBalanceFromAdmin() {
+            const val = parseFloat(document.getElementById('admin-btc-input').value);
+            if (!isNaN(val) && val >= 0) {
+                btcBalance = val;
+                if (currentUser && currentUser.email) {
+                    localStorage.setItem(`qm_btc_balance_${currentUser.email}`, btcBalance);
+                }
+                updateDisplayValues();
+                showToast('Баланс успешно обновлен!', 'success');
+            }
+        }
+
+        function quickSetBalance(val) {
+            btcBalance = val;
+            document.getElementById('admin-btc-input').value = btcBalance.toFixed(8);
+            if (currentUser && currentUser.email) {
+                localStorage.setItem(`qm_btc_balance_${currentUser.email}`, btcBalance);
+            }
+            updateDisplayValues();
+            showToast(`Баланс установлен на ${val} BTC`, 'success');
+        }
+
+        function updatePriceFromAdmin() {
+            const val = parseFloat(document.getElementById('admin-price-input').value);
+            if (!isNaN(val) && val > 0) {
+                currentBtcPrice = val;
+                updateDisplayValues();
+                showToast('Цена BTC изменена вручную!', 'success');
+            }
+        }
+
+        // --- MODAL UTILS ---
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Custom Toast Notification (No alert() used)
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast-notification');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.innerText = message;
+
+            if (type === 'error') {
+                iconEl.className = 'fa-solid fa-circle-exclamation text-red-400 text-lg';
+            } else if (type === 'success') {
+                iconEl.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else {
+                iconEl.className = 'fa-solid fa-circle-info text-amber-400 text-lg';
+            }
+
+            toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
